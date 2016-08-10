@@ -30,22 +30,26 @@ def put_item_redis(key, value):
     redis.set(key, value)
 
 def exists_in_ddb(key):
-    ddb = boto3.client("dynamodb")
-    response = ddb.get_item(
-        TableName="ecs-demo-signup",
-        Key={"email": {"S": key}})
-    return "Item" in response
+    try:
+        ddb = boto3.client("dynamodb")
+        response = ddb.get_item(
+            TableName="ecs-demo-signup",
+            Key={"email": {"S": key}})
+        return "Item" in response
+    except Exception as err:
+        print "Error in exists_in_ddb: " + err
+        raise
 
 def put_item_ddb(key, tuples):
-    item = {"email": {"S": key}}
-    for tuple in tuples:
-        if len(tuple[1]) > 0:
-            item[tuple[0]] = {"S": tuple[1]}
-    ddb = boto3.client("dynamodb")
     try:
+        item = {"email": {"S": key}}
+        for tuple in tuples:
+            if len(tuple[1]) > 0:
+                item[tuple[0]] = {"S": tuple[1]}
+        ddb = boto3.client("dynamodb")
         ddb.put_item(TableName="ecs-demo-signup", Item=item)
     except Exception as err:
-        print err
+        print "Error in put_item_ddb: " + err
         raise
 
 # Create the Flask app
@@ -58,16 +62,21 @@ def welcome():
 
 @application.route('/signup', methods=['POST'])
 def signup():
+    print "Processing request"
     tuples = []
     signup_data = dict()
     for item in request.form:
+        print "item: " + item
         signup_data[item] = request.form[item]
         if item != "email":
             tuples.append((item, request.form[item]))
+            print "{0}={1}".format(item, request.form[item])
 
     if exists_in_ddb(signup_data['email']):
+        print "User already exists in database"
         return Response("", status=409, mimetype='application/json')
     else:
+        print "User does not exists in database. . . saving"
         put_item_ddb(signup_data['email'], tuples)
 
     return Response(json.dumps(signup_data), status=201, mimetype='application/json')
