@@ -60,10 +60,10 @@ def signup():
         if item != "email":
             tuples.append((item, request.form[item]))
 
-    if exists_in_redis(signup_data['email']):
+    if exists_in_ddb(signup_data['email']):
         return Response("", status=409, mimetype='application/json')
     else:
-        put_item_redis(signup_data['email'], "true")
+        put_item_ddb(signup_data['email'], tuples)
 
     return Response(json.dumps(signup_data), status=201, mimetype='application/json')
 
