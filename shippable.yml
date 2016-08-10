@@ -12,5 +12,5 @@ build:
 
 integrations:
     hub:
-      - integrationName: "Amazon ECR"
+      - integrationName: "ecr-shippable"
         type: ecr
