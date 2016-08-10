@@ -72,12 +72,12 @@ def signup():
             tuples.append((item, request.form[item]))
             print "{0}={1}".format(item, request.form[item])
 
-    if exists_in_ddb(signup_data['email']):
+    if exists_in_redis(signup_data['email']):
         print "User already exists in database"
         return Response("", status=409, mimetype='application/json')
     else:
         print "User does not exists in database. . . saving"
-        put_item_ddb(signup_data['email'], tuples)
+        put_item_redis(signup_data['email'], "true")
 
     return Response(json.dumps(signup_data), status=201, mimetype='application/json')
 
