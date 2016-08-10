@@ -39,9 +39,14 @@ def exists_in_ddb(key):
 def put_item_ddb(key, tuples):
     item = {"email": {"S": key}}
     for tuple in tuples:
-        item[tuple[0]] = {"S": tuple[1]}
+        if len(tuple[1]) > 0:
+            item[tuple[0]] = {"S": tuple[1]}
     ddb = boto3.client("dynamodb")
-    ddb.put_item(TableName="ecs-demo-signup", Item=item)
+    try:
+        ddb.put_item(TableName="ecs-demo-signup", Item=item)
+    except Exception as err:
+        print err
+        raise
 
 # Create the Flask app
 application = flask.Flask(__name__)
