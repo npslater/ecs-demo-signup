@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# changing this comment for demo commit 
+# changing this comment for demo commit
 import os
 import sys
 import json
@@ -20,6 +20,28 @@ import flask
 from flask import request, Response
 
 from redis import Redis
+
+import boto3
+
+def exists_in_redis(key):
+    return redis.exists(key)
+
+def put_item_redis(key, value):
+    redis.set(key, value)
+
+def exists_in_ddb(key):
+    ddb = boto3.client("dynamodb")
+    response = ddb.get_item(
+        TableName="ecs-demo-signup",
+        Key={"email": {"S": key}})
+    return "Item" in response
+
+def put_item_ddb(key, tuples):
+    item = {"email": {"S": key}}
+    for tuple in tuples:
+        item[tuple[0]] = {"S": tuple[1]}
+    ddb = boto3.client("dynamodb")
+    ddb.put_item(TableName="ecs-demo-signup", Item=item)
 
 # Create the Flask app
 application = flask.Flask(__name__)
@@ -31,14 +53,17 @@ def welcome():
 
 @application.route('/signup', methods=['POST'])
 def signup():
+    tuples = []
     signup_data = dict()
     for item in request.form:
         signup_data[item] = request.form[item]
+        if item != "email":
+            tuples.append((item, request.form[item]))
 
-    if redis.exists(signup_data['email']):
+    if exists_in_redis(signup_data['email']):
         return Response("", status=409, mimetype='application/json')
     else:
-        redis.set(signup_data['email'], 'true')
+        put_item_redis(signup_data['email'], "true")
 
     return Response(json.dumps(signup_data), status=201, mimetype='application/json')
 

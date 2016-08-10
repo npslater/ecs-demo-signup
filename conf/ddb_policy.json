@@ -1,0 +1,29 @@
+{
+    "Statement": [
+        {
+            "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:Query",
+                "dynamodb:PutItem",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:UpdateItem"
+            ],
+            "Resource": [
+                "arn:aws:dynamodb:us-east-1:127436723527:table/ecs-demo-signup*"
+            ],
+            "Effect": "Allow",
+            "Sid": "1"
+        },
+        {
+            "Action": [
+                "dynamodb:DescribeTable",
+                "dynamodb:ListTables"
+            ],
+            "Resource": "*",
+            "Effect": "Allow",
+            "Sid": "2"
+        }
+    ]
+}
